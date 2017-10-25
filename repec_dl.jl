@@ -11,15 +11,16 @@ println("Packages loaded.")
 # Variables
 #-------------------------------------------------------------------------------
 
-authorlist  = readtable("authorlist.csv")
-startdate   = "2013" # Only include papers newer than this year.
+authorlist      = readtable("authorlist.csv")
+repecseriescode = "deukcuk" # Enter your department's RePEc code here.
+startdate       = "2013"    # Only include papers newer than this year.
 
 #-------------------------------------------------------------------------------
 # Body
 #-------------------------------------------------------------------------------
 
 println("Downloading data.")
-webresponse = get("https://ideas.repec.org/d/deukcuk.html")
+webresponse = get(string("https://ideas.repec.org/d/",repecseriescode,".html")
 println("Data downloaded.")
 
 datastring = readstring(webresponse)
@@ -32,8 +33,6 @@ bkstart = search(datastring,"Books",jastart[1])
 println("Processing working papers.")
 
 wpstring = datastring[maximum(wpstart)+1:minimum(jastart)-1];
-#wpstring = wpstring[minimum(search(wpstring,"<LI class=\"down")):minimum(search(wpstring,startdate))-1];
-#wpstring = wpstring[1:minimum(search(wpstring,string("</OL><H4>",startdate,"</H4><OL>")))]
 wpstring = wpstring[minimum(search(wpstring,"<LI class=\"down")):minimum(search(wpstring,string("</OL><H4>",startdate,"</H4><OL>")))-1];
 
 for iter_year in parse(startdate):Dates.year(now())
@@ -101,7 +100,6 @@ println("Working papers processed and saved to file.")
 println("Processing journal articles.")
 
 jastring = datastring[maximum(jastart)+1:minimum(bkstart)-1];
-#jastring = jastring[minimum(search(jastring,"<LI class=\"down")):minimum(search(jastring,startdate))-1];
 jastring = jastring[minimum(search(jastring,"<LI class=\"down")):minimum(search(jastring,string("</OL><H4>",startdate,"</H4><OL>")))-1];
 
 jastring = replace(jastring,r"<BR><div class=\"otherversion\"><UL>+.+</UL></div>","")
