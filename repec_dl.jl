@@ -32,8 +32,6 @@ bkstart = search(datastring,"Books",jastart[1])
 println("Processing working papers.")
 
 wpstring = datastring[maximum(wpstart)+1:minimum(jastart)-1];
-#wpstring = wpstring[minimum(search(wpstring,"<LI class=\"down")):minimum(search(wpstring,startdate))-1];
-#wpstring = wpstring[1:minimum(search(wpstring,string("</OL><H4>",startdate,"</H4><OL>")))]
 wpstring = wpstring[minimum(search(wpstring,"<LI class=\"down")):minimum(search(wpstring,string("</OL><H4>",startdate,"</H4><OL>")))-1];
 
 for iter_year in parse(startdate):Dates.year(now())
