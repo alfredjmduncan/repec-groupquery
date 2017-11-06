@@ -11,16 +11,15 @@ println("Packages loaded.")
 # Variables
 #-------------------------------------------------------------------------------
 
-authorlist      = readtable("authorlist.csv")
-repecseriescode = "deukcuk" # Enter your department's RePEc code here.
-startdate       = "2013"    # Only include papers newer than this year.
+authorlist  = readtable("authorlist.csv")
+startdate   = "2013" # Only include papers newer than this year.
 
 #-------------------------------------------------------------------------------
 # Body
 #-------------------------------------------------------------------------------
 
 println("Downloading data.")
-webresponse = get(string("https://ideas.repec.org/d/",repecseriescode,".html")
+webresponse = get("https://ideas.repec.org/d/deukcuk.html")
 println("Data downloaded.")
 
 datastring = readstring(webresponse)
@@ -33,6 +32,8 @@ bkstart = search(datastring,"Books",jastart[1])
 println("Processing working papers.")
 
 wpstring = datastring[maximum(wpstart)+1:minimum(jastart)-1];
+#wpstring = wpstring[minimum(search(wpstring,"<LI class=\"down")):minimum(search(wpstring,startdate))-1];
+#wpstring = wpstring[1:minimum(search(wpstring,string("</OL><H4>",startdate,"</H4><OL>")))]
 wpstring = wpstring[minimum(search(wpstring,"<LI class=\"down")):minimum(search(wpstring,string("</OL><H4>",startdate,"</H4><OL>")))-1];
 
 for iter_year in parse(startdate):Dates.year(now())
@@ -81,16 +82,24 @@ end
 
 println("Cleaning up working papers.")
 
-wpstring = replace(wpstring,r"<A HREF+.+html\">","")
-wpstring = replace(wpstring,"</A>","")
-wpstring = replace(wpstring,"<B>","")
-wpstring = replace(wpstring,"</B>","")
+wpstring = replace(wpstring,r"HREF=\"/p","HREF=\"https://ideas.repec.org/p")
+wpstring = replace(wpstring,r"<B><A","<A__PH")          # Add Placeholder
+wpstring = replace(wpstring,"</A></B>","</A__PH>")      # Add Placeholder
+wpstring = replace(wpstring,r"<A HREF+.+html\">","<i>") # Delete journal links
+wpstring = replace(wpstring,"</A>","</i>")
+wpstring = replace(wpstring,r"__PH","")                 # Remove placeholder
+wpstring = replace(wpstring,r".html\"",".html\" target=\"_blank\"") # Open in new tab
+
 wpstring = replace(wpstring,"\n\",\"\n,","")
 wpstring = replace(wpstring," class=\"downgate\"","")
 wpstring = replace(wpstring," class=\"downfree\"","")
 wpstring = replace(wpstring,"<BR><","")
+wpstring = replace(wpstring,"<<","<")
 wpstring = replace(wpstring,"<UL>","")
 wpstring = replace(wpstring,"</UL></div>","")
+wpstring = replace(wpstring,"div class=\"publishedas\">","")
+wpstring = replace(wpstring,"div class=\"otherversion\">","")
+wpstring = replace(wpstring,",\"","\",")
 
 
 write("wp.html",wpstring);
@@ -100,6 +109,7 @@ println("Working papers processed and saved to file.")
 println("Processing journal articles.")
 
 jastring = datastring[maximum(jastart)+1:minimum(bkstart)-1];
+#jastring = jastring[minimum(search(jastring,"<LI class=\"down")):minimum(search(jastring,startdate))-1];
 jastring = jastring[minimum(search(jastring,"<LI class=\"down")):minimum(search(jastring,string("</OL><H4>",startdate,"</H4><OL>")))-1];
 
 jastring = replace(jastring,r"<BR><div class=\"otherversion\"><UL>+.+</UL></div>","")
@@ -133,7 +143,7 @@ while jalastrec == 0
 
   else
     for i in 1:size(authorlist)[1]
-      if contains(jarecord,authorlist[:Surname][i])
+      if contains(jarecord,authorlist[:Surname][i]) && contains(jarecord,"HREF=\"/a")
         jainclude = 1
       end
     end
@@ -167,16 +177,21 @@ end
 
 println("Cleaning up journal articles.")
 
-jastring = replace(jastring,r"<A HREF+.+html\">","")
-jastring = replace(jastring,"</A>","")
-jastring = replace(jastring,"<B>","")
-jastring = replace(jastring,"</B>","")
+
+jastring = replace(jastring,r"HREF=\"/a","HREF=\"https://ideas.repec.org/a")
+jastring = replace(jastring,r"<B><A","<A__PH")          # Add Placeholder
+jastring = replace(jastring,"</A></B>","</A__PH>")      # Add Placeholder
+jastring = replace(jastring,r"<A HREF+.+html\">","<i>") # Delete journal links
+jastring = replace(jastring,"</A>","</i>")
+jastring = replace(jastring,r"__PH","")                 # Remove placeholder
+jastring = replace(jastring,r".html\"",".html\" target=\"_blank\"") # Open in new tab
 jastring = replace(jastring,"\n\",\"\n,","")
 jastring = replace(jastring," class=\"downgate\"","")
 jastring = replace(jastring," class=\"downfree\"","")
 jastring = replace(jastring,"<BR><","")
 jastring = replace(jastring,"<UL>","")
 jastring = replace(jastring,"</UL></div>","")
+jastring = replace(jastring,",\"","\",")
 
 write("ja.html",jastring);
 println("Journal articles processed and saved to file.")
